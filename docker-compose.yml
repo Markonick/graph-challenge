@@ -1,0 +1,15 @@
+version: "3.9"
+services:
+
+  app:
+    container_name: app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./app:/app
+    # environment:
+    #   PSQL_USERNAME: ${PSQL_USERNAME}
+
+    ports:
+     - "5000:8000"
