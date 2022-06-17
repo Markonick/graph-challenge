@@ -17,29 +17,47 @@ router = APIRouter(
 )
 
 @router.post("/acyclic", response_model=AifiResponse, status_code=200, )
-async def get_is_dag_acyclic(
+async def get_is_dag_acyclic_and_cycles(
     request: AifiDagsRequest,
     dags_svc: DagsService=Depends(DagsService)
 ) -> AifiResponse:
     """Get a dataset based on a known dataset id."""
     try:
-        print(request)
-        is_acyclic = dags_svc.is_acyclic_graph(request.graph)
+        is_acyclic, cycle = dags_svc.get_cycle(graph=request.graph)
     except Exception as e:
         raise
     
-    return AifiResponse(content=is_acyclic, status_code=200)
+    return AifiResponse(content=json.dumps((is_acyclic, cycle)), status_code=200)
 
-@router.get("", response_model=AifiResponse, status_code=200, )
+@router.post("", response_model=AifiResponse, status_code=200, )
 async def get_graphs(
-    # number: int,
+    request: AifiDagsRequest,
     dags_svc: DagsService=Depends(DagsService)
 ) -> AifiResponse:
     """Get a dataset based on a known dataset id."""
     try:
-        print("YO   YOYOOYYOOY")
-        result = dags_svc.generate_dags(100)
+        result = [list(graph) for graph, is_acyclic in dags_svc.generate_graphs(
+            number_of_graphs=request.number_of_graphs,
+            number_of_nodes=request.number_of_nodes
+        )]
     except Exception as e:
         raise
-    print(result)
+
+    return AifiResponse(content=json.dumps(result), status_code=200)
+
+@router.post("/draw", response_model=AifiResponse, status_code=200, )
+async def draw_graphs(
+    request: AifiDagsRequest,
+    dags_svc: DagsService=Depends(DagsService)
+) -> AifiResponse:
+    """Get a dataset based on a known dataset id."""
+    try:
+        result = dags_svc.draw_graphs(
+            rows=request.rows,
+            columns=request.columns,
+            number_of_nodes=request.number_of_nodes
+        )
+    except Exception as e:
+        raise
+        
     return AifiResponse(content=json.dumps(result), status_code=200)
