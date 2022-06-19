@@ -36,14 +36,13 @@ def dag_graph_input() -> AifiDagsRequest:
 
     return AifiDagsRequest(graph=graph, )
 graphs_base_url = os.environ.get("GRAPHS_BASE_URL")
-graphs_base_url = "http://localhost:8000/api/graphs"
 
 
 def post_handler(endpoint: str, request: AifiDagsRequest):
     with TestClient(app,) as client:
         headers = {"content-type": "application/json"}
         try:
-            r =  client.post(url="http://localhost:8000/api/graphs/acyclic", headers=headers, data=json.dumps(dataclasses.asdict(request)))
+            r =  client.post(url=endpoint, headers=headers, data=json.dumps(dataclasses.asdict(request)))
         except Exception as e:
             print(e)
             r = str(e)

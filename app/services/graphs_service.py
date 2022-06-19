@@ -1,14 +1,12 @@
 from abc import ABC
 from dataclasses import dataclass
 import random
-from typing import Any, List, Tuple
+from typing import Any, List, Optional, Tuple
 import networkx as nx
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
-import asyncio
 import concurrent.futures
 import time
-import datetime
 
 IS_ACYCLIC = [
     False, True, True, False, False, True, False, False, False, True, 
@@ -41,16 +39,19 @@ class GraphsService:
                 return is_acyclic, cycle
         return is_acyclic, cycle
 
+    def _generate_random_generic_graph(self, number_of_nodes: int) -> Any:
+        p = 2 / number_of_nodes
+        return nx.gnp_random_graph(n=number_of_nodes, p=p, seed=2, directed=True)
+
     def _generate_dag(self, number_of_nodes: int) -> Any:
-        G = nx.gnp_random_graph(number_of_nodes, 1, directed=True)
+        G = self._generate_random_generic_graph(number_of_nodes=number_of_nodes)
         result = nx.DiGraph([(u, v, {'weight':random.randint(0,10)}) for (u, v) in G.edges() if u > v])
 
         return result
 
     def _generate_cycle_graph(self, number_of_nodes: int) -> Any:
-        G = nx.gnp_random_graph(number_of_nodes, 1, directed=True)
+        G = self._generate_random_generic_graph(number_of_nodes=number_of_nodes)
         result = nx.DiGraph([(u, v, {'weight':random.randint(0,10)}) for (u, v) in G.edges()])
-
         return result
         
 
@@ -61,23 +62,34 @@ class GraphsService:
             result = self._generate_cycle_graph(number_of_nodes=number_of_nodes)
         return result
 
-    def generate_graphs(self, acyclic_flags_list: List[bool], number_of_graphs: int, number_of_nodes: int) -> List[Tuple[bool, Any]]:
-        with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-            graphs = []
-            args = [(number_of_nodes, acyclic_flags_list[i]) for i in range(number_of_graphs)]
+    def generate_graphs(
+        self,
+        acyclic_flags_list: List[bool],
+        number_of_graphs: int,
+        number_of_nodes: int,
+        rows: Optional[int] = None,
+    ) -> List[Tuple[bool, Any]]:
+        # with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
+        #     graphs = []
+        #     args = [(number_of_nodes, acyclic_flags_list[i]) for i in range(number_of_graphs)]
 
-            for i, graph in enumerate(executor.map(self._generate_directed_graph, *zip(*args))):
-                graphs.append((acyclic_flags_list[i], list(graph.edges())))
+        #     for i, graph in enumerate(executor.map(self._generate_directed_graph, *zip(*args))):
+        #         graphs.append((acyclic_flags_list[i], list(graph.edges())))
             
-            return graphs
-    
-    def draw_graphs(self, acyclic_flags_list: List[bool], rows: int, columns: int, number_of_nodes: int) -> None:
+        #     return graphs
+        graphs = []
+        for is_acyclic in acyclic_flags_list:
+            graph = self._generate_directed_graph(number_of_nodes, is_acyclic)
+            graphs.append((is_acyclic, list(graph.edges())))
+
+        return graphs
+        
+    def draw_graphs(self, acyclic_flags_list: List[bool], rows: int, columns: int, number_of_nodes: int) -> List[Tuple[bool, Any]]:
         start = time.time()
         graphs = self.generate_graphs(
             acyclic_flags_list=acyclic_flags_list,
             number_of_graphs=rows*columns,
             number_of_nodes=number_of_nodes,
-            nrows=rows,
         )
         pdf_file_name = "graphs_plot.pdf"
       
@@ -88,12 +100,16 @@ class GraphsService:
                 for c in range(columns):
                     index = r*(columns) + c
                     is_acyclic = acyclic_flags_list[index]
-                    color = 'k' if is_acyclic else 'r'
-                    font_color = 'w' if is_acyclic else 'k'
+                    color = 'r' if is_acyclic else 'k'
+                    font_color = 'k' if is_acyclic else 'w'
                     colors = {"node_color": color, "edge_color" : color, "font_color": font_color}
+                    G = graphs[index][1]
+                    pos = nx.spectral_layout(G)
+                    nx.draw_networkx(nx.DiGraph(G), ax=axes[c],  **colors)
                     
-                    nx.draw_networkx(nx.DiGraph(graphs[index][1]), ax=axes[c], **colors)
-
                 pdf.savefig(fig)
+                plt.close(fig) # Close figure on each row to not get Memory warning for too many figs open!
+
         end = time.time()
         print(end - start)
+        return graphs

@@ -59,10 +59,13 @@ async def draw_graphs(
     try:
         result = dags_svc.draw_graphs(
             acyclic_flags_list=request.acyclic_flags_list,
-            rows=request.rows,
             columns=request.columns,
-            number_of_nodes=request.number_of_nodes
+            number_of_nodes=request.number_of_nodes,
+            rows=request.rows,
         )
+        
+        if not request.return_graph:
+            result = []
     except Exception as e:
         raise
 

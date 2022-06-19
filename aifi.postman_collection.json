@@ -1,0 +1,103 @@
+{
+	"variables": [],
+	"info": {
+		"name": "aifi",
+		"_postman_id": "e0d485cc-0b3a-78ed-3cd6-477646cb56d8",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://127.0.0.1:5000/api/graphs/acyclic",
+			"request": {
+				"url": "http://127.0.0.1:5000/api/graphs/acyclic",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Basic YWxpY2U6cGFzc3dvcmQ=",
+						"description": "",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"graph\": [\r\n\t\t[1, 2],\r\n\t\t[2, 3],\r\n\t\t[3, 4],\r\n\t\t[4, 1]\r\n\t]\r\n}\r\n"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/api/graphs/",
+			"request": {
+				"url": "http://127.0.0.1:5000/api/graphs/",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFsaWNlIiwiZW5hYmxlZCI6dHJ1ZSwiZXhwIjoxNjUzOTk5MDQ1fQ.nKcG4hIAKE32VGmw5GQq7e9TjXGbaMveehpSQlOQKrQ",
+						"description": "",
+						"disabled": true
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"graph\": [\r\n\t\t[\"m\", \"p\"],\r\n\t\t[\"n\", \"p\"],\r\n\t\t[\"o\", \"p\"],\r\n\t\t[\"p\", \"q\"]\r\n\t]\r\n}\r\n"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/api/graphs/",
+			"request": {
+				"url": "http://127.0.0.1:5000/api/graphs",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"acyclic\": \"false\",\n\t\"number_of_nodes\": 100,\n\t\"number_of_graphs\": 3\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		},
+		{
+			"name": "http://127.0.0.1:5000/api/graphs/draw",
+			"request": {
+				"url": "http://127.0.0.1:5000/api/graphs/draw",
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"acyclic_flags_list\": [true, false],\n\t\"rows\": 1,\n\t\"columns\": 2,\n\t\"number_of_nodes\": 100,\n\t\"return_graph\": false\n}"
+				},
+				"description": ""
+			},
+			"response": []
+		}
+	]
+}
