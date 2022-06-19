@@ -89,7 +89,8 @@ class GraphsService:
                     edges = graph.edges()
                     graphs.append(list(edges))
                     
-            return list(zip(acyclic_flags_list, graphs))
+            # return list(zip(acyclic_flags_list, graphs))
+            return graphs
 
         # The following single threaded code takes the same time to execute as the ThreadPool counterpart 
         # of the ProcessPool solution above (without chunksize - not applicable to ThreadPoolExecutor), which
@@ -116,7 +117,6 @@ class GraphsService:
             workers = 25
             with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 futures = []
-                graphs = []
                 chunksize = math.floor((rows*columns)/workers)
                 args = []
                
@@ -129,14 +129,8 @@ class GraphsService:
                     )
 
                 for i, future in enumerate(futures):
-                    print(future)
-                    print(type(future))
-                    for graph in future:
-                        print(type(graph))
-                        print(graph)
-                        edges = graph
-                        # print(list(edges))
-                        # graphs.append(list(edges))
+                    for k in future:
+                        print(k.result())
 
         end = time.time()
         print(end - start)
