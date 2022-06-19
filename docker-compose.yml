@@ -8,8 +8,8 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./app:/app
-    # environment:
-    #   PSQL_USERNAME: ${PSQL_USERNAME}
+    environment:
+      GRAPHS_BASE_URL: ${GRAPHS_BASE_URL}
 
     ports:
      - "5000:8000"

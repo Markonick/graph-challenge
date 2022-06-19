@@ -2,3 +2,6 @@ networkx
 pydantic
 fastapi[all]
 matplotlib
+pytest
+httpx
+pytest-asyncio
