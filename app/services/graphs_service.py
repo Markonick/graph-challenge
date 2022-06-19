@@ -1,5 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
+import math
 import random
 from typing import Any, List, Optional, Tuple
 import networkx as nx
@@ -68,21 +69,39 @@ class GraphsService:
         number_of_graphs: int,
         number_of_nodes: int,
         rows: Optional[int] = None,
+        workers: Optional[int] = 2
     ) -> List[Tuple[bool, Any]]:
-        # with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
-        #     graphs = []
-        #     args = [(number_of_nodes, acyclic_flags_list[i]) for i in range(number_of_graphs)]
+        with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+            futures = []
+            graphs = []
+            chunksize = math.floor(number_of_graphs/workers)
+            args = []
+            for i in range(workers):
+                start = i*chunksize
+                end = start + chunksize
+                args.append([(number_of_nodes, acyclic_flags_list[i]) for i in range(start,end)])
+                futures.append(
+                    executor.map(self._generate_directed_graph, *zip(*args[i]), chunksize=chunksize)
+                )
 
-        #     for i, graph in enumerate(executor.map(self._generate_directed_graph, *zip(*args))):
-        #         graphs.append((acyclic_flags_list[i], list(graph.edges())))
-            
-        #     return graphs
-        graphs = []
-        for is_acyclic in acyclic_flags_list:
-            graph = self._generate_directed_graph(number_of_nodes, is_acyclic)
-            graphs.append((is_acyclic, list(graph.edges())))
+            future_res = []
+            for i, future in enumerate(futures):
+                for graph in future:
+                    edges = graph.edges()
+                    future_res.append(list(edges))
 
-        return graphs
+            return future_res
+
+        # The following single threaded code takes the same time to execute as the ThreadPool above, which
+        # implies that this is not an I/O bound but rather a CPU bound process, however
+        # ProcessPool Executor did exhibit far inferior performance
+
+        # graphs = []
+        # for is_acyclic in acyclic_flags_list:
+        #     graph = self._generate_directed_graph(number_of_nodes, is_acyclic)
+        #     graphs.append((is_acyclic, list(graph.edges())))
+
+        # return graphs
         
     def draw_graphs(self, acyclic_flags_list: List[bool], rows: int, columns: int, number_of_nodes: int) -> List[Tuple[bool, Any]]:
         start = time.time()
@@ -94,21 +113,32 @@ class GraphsService:
         pdf_file_name = "graphs_plot.pdf"
       
         with PdfPages(pdf_file_name) as pdf:
-            for r in range(rows):
-                fig, axes = plt.subplots(nrows=1, ncols=columns, figsize=(40, 30))
+            workers = 4
+            with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
+                futures = []
+                graphs = []
+                chunksize = math.floor((rows*columns)/workers)
+                args = []
+                for i in range(workers):
+                    start = i*chunksize
+                    end = start + chunksize
+                    args.append([(number_of_nodes, acyclic_flags_list[i]) for i in range(start,end)])
+                    futures.append(executor.map(self._generate_directed_graph, *zip(*args[i]), chunksize=chunksize))
+        #     for r in range(rows):
+        #         fig, axes = plt.subplots(nrows=1, ncols=columns, figsize=(40, 30))
 
-                for c in range(columns):
-                    index = r*(columns) + c
-                    is_acyclic = acyclic_flags_list[index]
-                    color = 'r' if is_acyclic else 'k'
-                    font_color = 'k' if is_acyclic else 'w'
-                    colors = {"node_color": color, "edge_color" : color, "font_color": font_color}
-                    G = graphs[index][1]
-                    pos = nx.spectral_layout(G)
-                    nx.draw_networkx(nx.DiGraph(G), ax=axes[c],  **colors)
-                    
-                pdf.savefig(fig)
-                plt.close(fig) # Close figure on each row to not get Memory warning for too many figs open!
+        #         for c in range(columns):
+        #             index = r*(columns) + c
+        #             is_acyclic = acyclic_flags_list[index]
+        #             color = 'r' if is_acyclic else 'k'
+        #             font_color = 'k' if is_acyclic else 'w'
+        #             colors = {"node_color": color, "edge_color" : color, "font_color": font_color}
+        #             G = graphs[index][1]
+        #             pos = nx.spectral_layout(G)
+        #             nx.draw_networkx(nx.DiGraph(G), ax=axes[c],  **colors)
+        #             plt.close(fig) # Close figure on each row to not get Memory warning for too many figs open!
+        #         pdf.savefig(fig)
+                # 
 
         end = time.time()
         print(end - start)
