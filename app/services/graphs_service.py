@@ -84,17 +84,17 @@ class GraphsService:
                     executor.map(self._generate_directed_graph, *zip(*args[i]), chunksize=chunksize)
                 )
 
-            future_res = []
             for i, future in enumerate(futures):
                 for graph in future:
                     edges = graph.edges()
-                    future_res.append(list(edges))
+                    graphs.append(list(edges))
+                    
+            return list(zip(acyclic_flags_list, graphs))
 
-            return future_res
-
-        # The following single threaded code takes the same time to execute as the ThreadPool above, which
+        # The following single threaded code takes the same time to execute as the ThreadPool counterpart 
+        # of the ProcessPool solution above (without chunksize - not applicable to ThreadPoolExecutor), which
         # implies that this is not an I/O bound but rather a CPU bound process, however
-        # ProcessPool Executor did exhibit far inferior performance
+        # ProcessPoolExecutor did exhibit far inferior performance
 
         # graphs = []
         # for is_acyclic in acyclic_flags_list:
@@ -110,20 +110,61 @@ class GraphsService:
             number_of_graphs=rows*columns,
             number_of_nodes=number_of_nodes,
         )
+        
         pdf_file_name = "graphs_plot.pdf"
-      
         with PdfPages(pdf_file_name) as pdf:
-            workers = 4
+            workers = 25
             with concurrent.futures.ProcessPoolExecutor(max_workers=workers) as executor:
                 futures = []
                 graphs = []
                 chunksize = math.floor((rows*columns)/workers)
                 args = []
-                for i in range(workers):
-                    start = i*chunksize
+               
+                for r in range(rows):
+                    start = r*chunksize
                     end = start + chunksize
-                    args.append([(number_of_nodes, acyclic_flags_list[i]) for i in range(start,end)])
-                    futures.append(executor.map(self._generate_directed_graph, *zip(*args[i]), chunksize=chunksize))
+                    args = (acyclic_flags_list[start:end], columns, graphs[start:end], pdf)
+                    futures.append(
+                        executor.map(self.draw_rows, args, chunksize=chunksize)
+                    )
+
+                for i, future in enumerate(futures):
+                    print(future)
+                    print(type(future))
+                    for graph in future:
+                        print(type(graph))
+                        print(graph)
+                        edges = graph
+                        # print(list(edges))
+                        # graphs.append(list(edges))
+
+        end = time.time()
+        print(end - start)
+        return graphs
+
+    def draw_rows(self, acyclic_flags_list, columns, graphs, pdf):
+        print("DRAWING!!!!")
+        print("DRAWING!!!!")
+        print("DRAWING!!!!")
+        print("DRAWING!!!!")
+        print("DRAWING!!!!")
+        fig, axes = plt.subplots(nrows=1, ncols=columns, figsize=(40, 30))
+
+        for c in range(columns):
+            is_acyclic = acyclic_flags_list[c]
+            color = 'r' if is_acyclic else 'k'
+            font_color = 'k' if is_acyclic else 'w'
+            colors = {"node_color": color, "edge_color" : color, "font_color": font_color}
+            G = graphs[c][1]
+            pos = nx.spectral_layout(G)
+            nx.draw_networkx(nx.DiGraph(G), ax=axes[c],  **colors)
+            plt.close(fig) # Close figure on each row to not get Memory warning for too many figs open!
+        pdf.savefig(fig)
+        print("Closed page!!!")
+        print("Closed page!!!")
+        print("Closed page!!!")
+        print("Closed page!!!")
+
         #     for r in range(rows):
         #         fig, axes = plt.subplots(nrows=1, ncols=columns, figsize=(40, 30))
 
@@ -138,8 +179,7 @@ class GraphsService:
         #             nx.draw_networkx(nx.DiGraph(G), ax=axes[c],  **colors)
         #             plt.close(fig) # Close figure on each row to not get Memory warning for too many figs open!
         #         pdf.savefig(fig)
-                # 
 
-        end = time.time()
-        print(end - start)
-        return graphs
+        # end = time.time()
+        # print(end - start)
+        # return graphs
