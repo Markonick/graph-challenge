@@ -17,7 +17,11 @@ The main motiovation behind this decision was that:
 
 So for now we use Postman to make HTTP calls to the calculation endpoints (curl also works).
 
-To startup everything, just run the command: 
+To startup everything, first create a .env file and add:
+
+```GRAPHS_BASE_URL=http://localhost:8000/api/graphs```
+
+Then assuming that docker is installed just run the command: 
 
 ```docker-compose up --build```
 
