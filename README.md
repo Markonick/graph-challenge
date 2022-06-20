@@ -217,7 +217,7 @@ Then we tried out *random_layout* which creates somewhat more realistic graphs a
 belonging to the interval [0.0, 1.0). This is somewhat better but again, in case edge weights matter, then we lose that info.
 So we ended up no using the "pos" option to describe the layout wrapper of the graph.
 
-
+The graph printouts as a PDF file can be found in the app folder.
 
 **Submission:**
 Document your thought process and results from Q1 – Q4. Submit your results in a .zip file with both
