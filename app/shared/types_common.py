@@ -12,9 +12,10 @@ class AifiDagsRequest:
     number_of_nodes: Optional[int] = 10
     number_of_graphs: Optional[int] = 1
     return_graph: Optional[bool] = True
+    file_path: Optional[str] = None
+    layout: Optional[str] = None
 
 @dataclass 
 class AifiResponse:
     content: str
     status_code: Optional[str] = None
-

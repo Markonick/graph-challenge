@@ -22,7 +22,7 @@ async def get_is_dag_acyclic_and_cycles(
     request: AifiDagsRequest,
     dags_svc: GraphsService=Depends(GraphsService)
 ) -> AifiResponse:
-    """Get a dataset based on a known dataset id."""
+    """Returns whether a graph is acyclic."""
     try:
         is_acyclic, cycle = dags_svc.get_cycle(graph=request.graph)
     except Exception as e:
@@ -35,7 +35,8 @@ async def get_graphs(
     request: AifiDagsRequest,
     dags_svc: GraphsService=Depends(GraphsService)
 ) -> AifiResponse:
-    """Get a dataset based on a known dataset id."""
+    """POST that creates graph(s) and returns them as a (list of if many graphs) list of tuples (edges) based on whether
+    we need it to be acyclic or not and by defining the number of nodes."""
     try:
         result = dags_svc.generate_graphs(
                     acyclic_flags_list=request.acyclic_flags_list,
@@ -55,13 +56,16 @@ async def draw_graphs(
     request: AifiDagsRequest,
     dags_svc: GraphsService=Depends(GraphsService)
 ) -> AifiResponse:
-    """Get a dataset based on a known dataset id."""
+    """POST that creates a resource (in this case a PDF file) 
+    and can return the actual graph in list of tuple format if requested."""
     try:
         result = dags_svc.draw_graphs(
             acyclic_flags_list=request.acyclic_flags_list,
             columns=request.columns,
             number_of_nodes=request.number_of_nodes,
             rows=request.rows,
+            file_path=request.file_path,
+            layout=request.layout,
         )
         
         if not request.return_graph:
