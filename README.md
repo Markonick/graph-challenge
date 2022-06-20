@@ -47,12 +47,14 @@ QUESTIONS
 ---------
 
 **Question 1:**
+
 In practice we favor directed graphs without cycles a.k.a. Directed Acyclic Graph. Your first task is to
 write a function that decides if a directed graph is acyclic. It is OK to use 3rd party API.
 Input: an arbitrary directed graph
 Output: the first loop found in the graph or NULL/None
 
 **Answer:**
+
 The choice was to use the popular networkx as it seems to have plenty of the 
 functionality required, possibly however at the cost of performance.
 
@@ -97,10 +99,12 @@ You can run tests on the services directly:
 
 
 **Question 2:**
+
 What is the runtime and memory complexity of your implementation? If you use external libraries or
 API, please read its documentation and report back the complexity.
 
 **Answer:**
+
 From looking at the networkx documentation, they are using the Kahn alorithm for topological sorting.
 Doing some further reading on this algorithm, the implications on complexity are the following:
 
@@ -119,18 +123,35 @@ b) Spatial complexity is O(V):
 
 
 **Question 3:**
+
 Now that you have your cycle detector for an arbitrary directed graph, let us test it! How to
 systematically generate 100 graphs of 100 nodes each? How to ensure your test graph has cycles or not?
 Write your test app that can systematically generate complex graphs with cycles and graphs without
 cycles. Then run your implementation on these test cases to ensure correctness.
 Hint: A cycled graph can be derived from Euclidean Minimal Spanning Tree
 
+**Answer:**
+Run the Postman POST 
+```http://127.0.0.1:5000/api/graphs``` 
+
+with the JSON body:
+
+```
+{
+	"acyclic_flags_list": [
+		false],
+	"number_of_nodes": 100,
+	"number_of_graphs": 1
+}
+```
 
 **Comments:**
+
 We had to tweak the probabilty of connection to create reasonable graphs (eg. not fully connected)
 while considering the time performance and the ability to actually create enough edges to have a reversed one.
 
 **Question 4:**
+
 It is also important to be able to visualize graphs. Display your 100 test graphs in a 25 x 4 grid. Each
 graph should be colored red. If the graph has a cycle, mark that subgraph as black. Use your creativity
 how to visualize graphs in their most intuitive forms. Please save the graphics as either PDF or PNG file.
