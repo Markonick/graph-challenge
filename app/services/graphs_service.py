@@ -1,4 +1,5 @@
 from abc import ABC
+from collections import defaultdict
 from dataclasses import dataclass
 import math
 import random
@@ -23,10 +24,60 @@ IS_ACYCLIC = [
     True, True, True, False, False, True, True, True, False, True, 
 ]
 
+class Graph:
+    def __init__(self, number_of_vertices):
+        self._graph = defaultdict(list)
+        self._n = number_of_vertices
+
+    def add_edge(self, u, v):
+        self._graph[u].append(v)
+    
+    def topological_sort(self):
+        in_degree = [0]*self._n
+
+        for u in self._graph:
+            for v in self._graph[u]:
+                in_degree[v] += 1
+        
+        queue = []
+
+        for i in range(self._n):
+            if in_degree[i] == 0:
+                queue.append(i)
+
+        cnt = 0
+        top_sort = []
+
+        while queue:
+            u = queue.pop(0)
+            top_sort.append(u)
+
+            for i in self._graph[u]:
+                in_degree[i] -= 1
+                if in_degree == 0:
+                    queue.append(i)
+            
+            cnt += 1
+        
+        if cnt != self._n:
+            return False
+        else:
+            return True
+
 
 class GraphsService:
     def __init__(self, ):
         self._graph = nx.DiGraph()
+
+    def is_acyclic_graph_custom(self, graph: List[Tuple]) -> bool:
+        """
+        Method that is exposed to the api. Responsible for returning a boolean flag on 
+        whether the input graph is acyclic (a DAG) or not. 
+        Also called by get_cycle()
+        """
+        graph = Graph(n)
+        self._graph.add_edges_from(graph)
+        in_degree = [0]*len(self._graph.nodes)
 
     def is_acyclic_graph(self, graph: List[Tuple]) -> bool:
         """
