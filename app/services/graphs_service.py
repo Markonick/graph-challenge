@@ -24,26 +24,26 @@ IS_ACYCLIC = [
     True, True, True, False, False, True, True, True, False, True, 
 ]
 
-class Graph:
+class CustomGraph:
     def __init__(self, number_of_vertices):
-        self._graph = defaultdict(list)
         self._n = number_of_vertices
+        self._graph = defaultdict(list)
 
     def add_edge(self, u, v):
         self._graph[u].append(v)
-    
-    def topological_sort(self):
-        in_degree = [0]*self._n
 
+    def topological_sort(self):
+        in_degree = defaultdict(int, {k: 0 for k in set(self._graph)})
+        
         for u in self._graph:
             for v in self._graph[u]:
                 in_degree[v] += 1
         
+        print("_graph: ", self._graph)
         queue = []
-
-        for i in range(self._n):
-            if in_degree[i] == 0:
-                queue.append(i)
+        for u in self._graph:
+            if in_degree[u] == 0:
+                queue.append(u)
 
         cnt = 0
         top_sort = []
@@ -54,30 +54,47 @@ class Graph:
 
             for i in self._graph[u]:
                 in_degree[i] -= 1
-                if in_degree == 0:
+
+                if in_degree[i] == 0:
                     queue.append(i)
-            
-            cnt += 1
-        
+
+            print(queue)
+            cnt +=1
+
+        print("in_degree :", in_degree)
+        print("queue: ", queue)
+        print("final cnt :", cnt)
+        print("Num of vertices :", self._n)
+        print("top_sort: ", top_sort)
         if cnt != self._n:
+            print("Found cycle in graph!")
             return False
         else:
             return True
+
+
 
 
 class GraphsService:
     def __init__(self, ):
         self._graph = nx.DiGraph()
 
-    def is_acyclic_graph_custom(self, graph: List[Tuple]) -> bool:
+    def is_acyclic_graph_custom(self, edges: List[Tuple]) -> bool:
         """
         Method that is exposed to the api. Responsible for returning a boolean flag on 
         whether the input graph is acyclic (a DAG) or not. 
         Also called by get_cycle()
         """
-        graph = Graph(n)
-        self._graph.add_edges_from(graph)
-        in_degree = [0]*len(self._graph.nodes)
+        unique_nodes = set(j for i in edges for j in i )
+        n = len(unique_nodes)
+        print(n)
+        graph = CustomGraph(n)
+        for u, v in edges:
+            graph.add_edge(u, v)
+        
+        is_acyclic = graph.topological_sort()
+
+        return is_acyclic
 
     def is_acyclic_graph(self, graph: List[Tuple]) -> bool:
         """

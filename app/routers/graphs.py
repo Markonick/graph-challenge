@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 import dataclasses
+import functools
 import json
+from tkinter.messagebox import RETRY
 from fastapi import APIRouter, Depends, Response
 from typing import List
 from fastapi import status
@@ -16,19 +18,74 @@ router = APIRouter(
     tags=["graphs"],
     responses={404: {"description": "Not found"}},
 )
+import sys
 
-@router.post("/acyclic", response_model=AifiResponse, status_code=200, )
-async def get_is_dag_acyclic_and_cycles(
+class recursionlimit:
+    def __init__(self, limit):
+        self.limit = limit
+
+    def __enter__(self):
+        self.old_limit = sys.getrecursionlimit()
+        sys.setrecursionlimit(self.limit)
+
+    def __exit__(self, type, value, tb):
+        sys.setrecursionlimit(self.old_limit)
+def memo(func):
+    cache = {}
+
+    def wrapped(*args):
+        if args in cache:
+            return cache[args]
+        else:
+            cache[args] = func(*args)
+            return cache[args]
+        
+    return wrapped
+
+@memo
+def fib(n):
+    with recursionlimit(15000):
+
+        if n == 0:
+            return 0
+        elif n == 1 or n == 2:
+            return 1
+        else:
+            return fib(n-1) + fib(n-2)
+        
+@router.post("/fibo", response_model=AifiResponse, status_code=200, )
+async def get_fibo(
+    request: AifiDagsRequest,
+) -> AifiResponse:
+    """Returns fibonacci of n"""
+    result = fib(request.n)
+    return AifiResponse(content=json.dumps(result), status_code=201)
+
+@router.post("/acyclic/custom", response_model=AifiResponse, status_code=200, )
+async def get_is_dag_acyclic(
     request: AifiDagsRequest,
     dags_svc: GraphsService=Depends(GraphsService)
 ) -> AifiResponse:
     """Returns whether a graph is acyclic."""
     try:
-        is_acyclic, cycle = dags_svc.get_cycle(graph=request.graph)
+        is_acyclic = dags_svc.is_acyclic_graph_custom(edges=request.graph)
     except Exception as e:
         raise
     
-    return AifiResponse(content=json.dumps((is_acyclic, cycle)), status_code=201)
+    return AifiResponse(content=json.dumps(is_acyclic), status_code=201)
+
+# @router.post("/acyclic", response_model=AifiResponse, status_code=200, )
+# async def get_is_dag_acyclic_and_cycles(
+#     request: AifiDagsRequest,
+#     dags_svc: GraphsService=Depends(GraphsService)
+# ) -> AifiResponse:
+#     """Returns whether a graph is acyclic."""
+#     try:
+#         is_acyclic, cycle = dags_svc.get_cycle(graph=request.graph)
+#     except Exception as e:
+#         raise
+    
+#     return AifiResponse(content=json.dumps((is_acyclic, cycle)), status_code=201)
 
 @router.post("", response_model=AifiResponse, status_code=200, )
 async def get_graphs(

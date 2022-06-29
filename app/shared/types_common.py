@@ -14,6 +14,7 @@ class AifiDagsRequest:
     return_graph: Optional[bool] = True
     file_path: Optional[str] = None
     layout: Optional[str] = None
+    n: Optional[int] = None
 
 @dataclass 
 class AifiResponse:
