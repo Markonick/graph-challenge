@@ -30,6 +30,7 @@ class recursionlimit:
 
     def __exit__(self, type, value, tb):
         sys.setrecursionlimit(self.old_limit)
+
 def memo(func):
     cache = {}
 
@@ -42,10 +43,14 @@ def memo(func):
         
     return wrapped
 
+def fib_gen(n):
+    a, b = 0, 1
+    for _ in range(n):
+        yield a
+        a, b = b, a + b
 @memo
 def fib(n):
     with recursionlimit(15000):
-
         if n == 0:
             return 0
         elif n == 1 or n == 2:
@@ -58,7 +63,8 @@ async def get_fibo(
     request: AifiDagsRequest,
 ) -> AifiResponse:
     """Returns fibonacci of n"""
-    result = fib(request.n)
+    # result = fib(request.n)
+    result = list(fib_gen(request.n))
     return AifiResponse(content=json.dumps(result), status_code=201)
 
 @router.post("/acyclic/custom", response_model=AifiResponse, status_code=200, )
